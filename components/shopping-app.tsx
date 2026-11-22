@@ -24,7 +24,9 @@ export function ShoppingApp() {
   const [invite, setInvite] = useState("");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [hideChecked, setHideChecked] = useState(false);
-  const moves = useRef(new Map<string, { positions: Map<string, number>; checked: boolean }>());
+  const groceriesRef = useRef<HTMLDivElement>(null);
+  const heightAnimation = useRef<Animation | null>(null);
+  const moves = useRef(new Map<string, { positions: Map<string, number>; height: number; checked: boolean }>());
   const isDemo = data.user.id === "demo";
   const showSyncStatus = !isDemo && (!online || pending > 0);
   const [syncStatus, setSyncStatus] = useState({ online: true, pending: 0 });
@@ -104,7 +106,7 @@ export function ShoppingApp() {
       document.querySelectorAll<HTMLElement>(".grocery-row").forEach(element => {
         positions.set(element.id, element.getBoundingClientRect().top + window.scrollY);
       });
-      moves.current.set(item.id, { positions, checked });
+      moves.current.set(item.id, { positions, height: groceriesRef.current?.getBoundingClientRect().height ?? 0, checked });
     }
     void run({ action: "check", listId: item.listId, id: item.id, checked })
       .catch((error: Error) => { moves.current.delete(item.id); setNotice(error.message); });
@@ -116,7 +118,19 @@ export function ShoppingApp() {
       if (item && item.checked !== move.checked) continue;
       moves.current.delete(id);
       if (!item) continue;
+      heightAnimation.current?.cancel();
+      const section = groceriesRef.current;
+      const endHeight = section?.getBoundingClientRect().height ?? 0;
       const movingId = "item-" + id;
+      const destination = document.getElementById(movingId);
+      const start = move.positions.get(movingId);
+      const distance = destination && start !== undefined
+        ? Math.abs(start - destination.getBoundingClientRect().top - window.scrollY)
+        : 0;
+      const timing = {
+        duration: Math.min(760, 440 + Math.max(distance, Math.abs(endHeight - move.height)) * 0.45),
+        easing: "cubic-bezier(.42,0,.18,1)"
+      };
       for (const [rowId, start] of move.positions) {
         const row = document.getElementById(rowId);
         if (!row) continue;
@@ -131,11 +145,16 @@ export function ShoppingApp() {
           { transform: "translateY(0)", zIndex: layer }
         ], {
           id: "grocery-move",
-          duration: Math.min(760, 440 + Math.abs(offset) * 0.45),
-          easing: "cubic-bezier(.42,0,.18,1)"
+          ...timing
         });
       }
-      if (!document.getElementById(movingId)) {
+      if (section && move.height > 0 && Math.abs(move.height - endHeight) >= 1) {
+        heightAnimation.current = section.animate(
+          [{ height: move.height + "px" }, { height: endHeight + "px" }],
+          timing
+        );
+      }
+      if (!destination) {
         document.getElementById("completed-heading")?.animate(
           [{ backgroundColor: "#dcebdc" }, { backgroundColor: "transparent" }],
           { duration: 520 }
@@ -271,7 +290,7 @@ export function ShoppingApp() {
             <div className="mt-6 flex items-center justify-between gap-3 sm:mt-8">
               <h2 className="text-2xl font-black tracking-[-.035em]">Namirnice</h2>
             </div>
-            {shopping.length > 0 ? <div className="mt-3 grid gap-4">
+            {shopping.length > 0 ? <div ref={groceriesRef} className="mt-3 grid auto-rows-max content-start gap-4">
               <section className="rounded-[20px] border border-[#e4e8dc] bg-background px-3 pb-1 sm:px-4">
                 <h3 className="flex items-center gap-2 border-b border-[#edf0e8] px-2 py-3.5 text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#f6ebdb] text-[#8b5c27]"><ShoppingBag size={15} /></span> Za kupiti <span className="rounded-md bg-[#f0f3eb] px-1.5 py-0.5 text-xs text-muted-foreground">{remaining.length}</span></h3>
                 {remaining.length ? <ul>{remaining.map(itemRow)}</ul> : <p className="px-3 py-5 text-sm text-muted-foreground">Sve sa spiska je kupljeno.</p>}
