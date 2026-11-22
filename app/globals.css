@@ -173,3 +173,31 @@ button.bg-primary {
     transition-delay: 160ms, 160ms, 0s;
   }
 }
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+:root { --empty-panel: #fff; --panel-transition: #edf2ec; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #19271f;
+  --foreground: #eef5ed;
+  --accent: #2e4234;
+  --accent-foreground: #dcebdc;
+  --primary: #a4d7ac;
+  --primary-foreground: #132c1c;
+  --muted-foreground: #b2c3b5;
+  --border: #425548;
+  --ring: #a4d7ac;
+  --empty-panel: #223329;
+  --panel-transition: #1b2921;
+}
+[data-theme="dark"] body {
+  background: radial-gradient(ellipse at 84% 0%, #254536, transparent 56%), #101a15;
+}
+[data-theme="dark"] :is(.min-h-svh > aside, main > header) {
+  background: rgb(22 35 27 / 94%);
+  border-color: var(--border);
+}
+[data-theme="dark"] main section:has(> ul) { background: #19271f; border-color: var(--border); }
+[data-theme="dark"] main section > ul > :is(.group, li > button) { background: #25362a; border-color: var(--border); }
+[data-theme="dark"] main section > ul > li > button:hover { background: var(--accent); }
+[data-theme="dark"] .hero-texture { background: linear-gradient(120deg, #244632, #305940); }

@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#f8f8f2", viewportFit: "cover" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="sr-Latn"><body>{children}</body></html>;
+  return <html lang="sr-Latn" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: `try{const t=localStorage.getItem("spisak:theme");document.documentElement.dataset.theme=t||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch{}` }} /></head><body>{children}</body></html>;
 }

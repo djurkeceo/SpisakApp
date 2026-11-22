@@ -173,7 +173,7 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
                     await run({ action: "grant", scope: panel.scope, id: panel.id, userId: member.id, permissions: member.permissions });
                     setSaved("Dozvole su sačuvane.");
                   })}>Sačuvaj</Button>
-                  <Button variant="ghost" size="sm" disabled={busy} className="text-red-700" onClick={() => void perform(async () => {
+                  <Button variant="ghost" size="sm" disabled={busy} className="text-red-700 dark:text-red-300" onClick={() => void perform(async () => {
                     await run({ action: "revoke", scope: panel.scope, id: panel.id, userId: member.id });
                     setMembers(previous => previous.filter(row => row.id !== member.id));
                     setSaved("Direktan pristup je uklonjen.");
@@ -201,7 +201,7 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
             {panel.type === "auth" && <Button type="button" variant="ghost" onClick={() => { setRegister(!register); setError(""); }}>{register ? "Već imaš nalog? Prijavi se" : "Prvi put si ovde? Napravi nalog"}</Button>}
           </form>
         )}
-        {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+        {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 dark:bg-red-950 p-3 text-sm text-red-800 dark:text-red-300">{error}</p>}
         {saved && <p role="status" className="mt-4 rounded-lg bg-accent p-3 text-sm">{saved}</p>}
       </DialogContent>
     </Dialog>
