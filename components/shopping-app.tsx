@@ -348,7 +348,7 @@ export function ShoppingApp() {
 
 
   return (
-    <div className="min-h-svh lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
+    <div className="app-shell min-h-svh lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-svh flex-col border-r border-[#e1e6da] dark:border-border bg-[#f1f4ec] px-5 pt-7 pb-5 lg:flex">
         <button className="flex items-center gap-3 rounded-xl text-left" onClick={overview}>
           <Image src="/icon-nas-spisak.svg" width={44} height={44} alt="" className="shrink-0" unoptimized />
@@ -373,7 +373,7 @@ export function ShoppingApp() {
       </aside>
 
       <main className="min-w-0">
-        <header className="border-b border-[#e7eadf] dark:border-border bg-[#fafaf5]">
+        <header className="app-header border-b border-[#e7eadf] dark:border-border bg-[#fafaf5]">
           <div className="mx-auto flex min-h-[67px] max-w-[1000px] items-center justify-between gap-3 px-4 sm:px-8">
             <div className="flex min-w-0 items-center gap-2 text-sm">
               <button onClick={overview} aria-label="NašSpisak · Svi spiskovi" className="flex min-h-10 min-w-0 items-center gap-2 rounded-lg font-bold text-[#415547] dark:text-accent-foreground hover:text-primary">
@@ -389,17 +389,17 @@ export function ShoppingApp() {
               {accountButton()}
             </div>
           </div>
+          <div
+            role="status"
+            aria-atomic="true"
+            aria-hidden={!showSyncStatus}
+            data-visible={showSyncStatus}
+            className="sync-status pointer-events-none z-30 flex items-center gap-2 rounded-2xl border border-white/70 bg-[#faeddb] dark:bg-accent px-4 py-3 text-sm text-[#644321] dark:text-accent-foreground shadow-md"
+          >
+            {syncStatus.online ? <RotateCw size={16} className="shrink-0" /> : <WifiOff size={16} className="shrink-0" />}
+            {syncStatus.pending ? `Izmene na čekanju: ${syncStatus.pending}` : "Bez interneta. Izmene se čuvaju na uređaju."}
+          </div>
         </header>
-        <div
-          role="status"
-          aria-atomic="true"
-          aria-hidden={!showSyncStatus}
-          data-visible={showSyncStatus}
-          className="sync-status pointer-events-none fixed right-3 z-30 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-2xl border border-white/70 bg-[#faeddb] dark:bg-accent px-4 py-3 text-sm text-[#644321] dark:text-accent-foreground shadow-md sm:right-6"
-        >
-          {syncStatus.online ? <RotateCw size={16} className="shrink-0" /> : <WifiOff size={16} className="shrink-0" />}
-          {syncStatus.pending ? `Izmene na čekanju: ${syncStatus.pending}` : "Bez interneta. Izmene se čuvaju na uređaju."}
-        </div>
 
         <div key={list?.id ?? folder?.id ?? view.scope} className="shopping-view mx-auto w-full max-w-[1000px] px-4 pt-5 pb-8 sm:px-8 sm:pt-8">
           {invite && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d9e4d6] dark:border-border bg-accent px-4 py-3">
@@ -457,7 +457,7 @@ export function ShoppingApp() {
             </div>}
             </div>
             {canAdd && (
-              <div id="add-grocery-anchor" className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
+              <div id="add-grocery-anchor" className="pointer-events-none sticky bottom-[max(1rem,var(--app-safe-bottom))] z-10 mt-4 flex justify-center">
                 <Button
                   type="button"
                   aria-label="Dodaj namirnicu"

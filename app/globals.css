@@ -154,8 +154,28 @@ button.bg-primary {
   .mobile-form-dialog { translate: -50% 0; }
 }
 
+.app-shell {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+.app-header {
+  --sync-status-gutter: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-top: var(--app-safe-top);
+}
+@media (min-width: 640px) {
+  .app-header { --sync-status-gutter: 1.5rem; }
+}
+
 .sync-status {
-  top: max(.75rem, env(safe-area-inset-top));
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: var(--sync-status-gutter);
+  max-width: calc(100% - var(--sync-status-gutter) * 2);
   opacity: 0;
   visibility: hidden;
 }
