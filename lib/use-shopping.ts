@@ -206,9 +206,9 @@ export function useShopping() {
       update(result.data);
       return { id: result.id };
     }
-    if (command.action === "check" || ((!navigator.onLine || readQueue(current.current.user.id).length > 0) &&
+    if (command.action === "check" || command.action === "remove" || ((!navigator.onLine || readQueue(current.current.user.id).length > 0) &&
         (command.action === "createFolder" || command.action === "createList" || command.action === "rename" ||
-         command.action === "add" || command.action === "edit" || command.action === "remove"))) {
+         command.action === "add" || command.action === "edit"))) {
       const userId = current.current.user.id;
       const entityId = "id" in command ? command.id : crypto.randomUUID();
       const next = [...readQueue(userId), { command, entityId, changeId: crypto.randomUUID() }];

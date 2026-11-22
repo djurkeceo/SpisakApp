@@ -169,18 +169,23 @@ export function ShoppingApp() {
     emptyTransition.current = null;
     const box = groceriesRef.current;
     if (shopping.length || !previous || previous.listId !== list?.id || !box) return;
-    box.getAnimations().filter(animation => animation.id === "last-row-exit").forEach(animation => animation.cancel());
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const target = box.getBoundingClientRect().height;
+    const outgoing = box.getAnimations().find(animation => animation.id === "last-row-exit");
+    const content = box.firstElementChild;
+    if (!content || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      outgoing?.cancel();
+      return;
+    }
+    const target = content.getBoundingClientRect().height;
     box.animate([
       { height: previous.height + "px", backgroundColor: "#edf2ec", overflow: "hidden" },
       { height: target + "px", backgroundColor: "#fff", overflow: "hidden" }
-    ], { duration: 600, easing: "cubic-bezier(.35,0,.2,1)" });
-    box.firstElementChild?.animate([
+    ], { duration: 600, easing: "cubic-bezier(.35,0,.2,1)", fill: "backwards" });
+    content.animate([
       { opacity: 0, transform: "translateY(5px)", offset: 0 },
       { opacity: 0, transform: "translateY(5px)", offset: .25 },
       { opacity: 1, transform: "translateY(0)" }
-    ], { duration: 600, easing: "ease-in-out" });
+    ], { duration: 600, easing: "ease-in-out", fill: "backwards" });
+    outgoing?.cancel();
   }, [shopping.length, list?.id]);
 
   const removing = useRef(new Set<string>());
@@ -190,6 +195,7 @@ export function ShoppingApp() {
     removing.current.add(item.id);
     const row = document.getElementById("item-" + item.id);
     let exit: Animation | undefined;
+    const fades: Animation[] = [];
     try {
       if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const height = row.getBoundingClientRect().height + "px";
@@ -198,9 +204,9 @@ export function ShoppingApp() {
         const last = shopping.length === 1 && box;
         if (last) {
           for (const group of box.children) {
-            group.animate([{ opacity: 1 }, { opacity: 0 }], {
-              id: "last-group-exit", duration: 220, fill: "forwards"
-            });
+            fades.push(group.animate([{ opacity: 1 }, { opacity: 0 }], {
+              id: "last-group-exit", duration: 220, fill: "both"
+            }));
           }
         }
         exit = last ? box.animate([
@@ -218,17 +224,12 @@ export function ShoppingApp() {
       }
       await run({ action: "remove", listId: item.listId, id: item.id });
     } catch (error) {
+      exit?.cancel();
+      fades.forEach(animation => animation.cancel());
       emptyTransition.current = null;
       setNotice(error instanceof Error ? error.message : "Namirnica nije obrisana.");
     } finally {
       removing.current.delete(item.id);
-      // Let React commit the updated list before releasing the exit styles.
-      requestAnimationFrame(() => {
-        exit?.cancel();
-        groceriesRef.current?.querySelectorAll(":scope > section").forEach(group => {
-          group.getAnimations().filter(animation => animation.id === "last-group-exit").forEach(animation => animation.cancel());
-        });
-      });
     }
   }
 
