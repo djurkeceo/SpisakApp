@@ -2,10 +2,11 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SpisakApp — Zajednička kupovina",
+  title: "NašSpisak — Zajednička kupovina",
   description: "Spiskovi za kupovinu koje deliš sa porodicom.",
+  icons: { icon: { url: "/icon-nas-spisak.svg", type: "image/svg+xml" }, apple: { url: "/icon-nas-spisak-180.png", sizes: "180x180" } },
   referrer: "no-referrer",
-  appleWebApp: { capable: true, title: "SpisakApp", statusBarStyle: "default" }
+  appleWebApp: { capable: true, title: "NašSpisak", statusBarStyle: "default" }
 };
 export const viewport: Viewport = { themeColor: "#f8f8f2", viewportFit: "cover" };
 

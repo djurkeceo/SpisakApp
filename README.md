@@ -1,4 +1,4 @@
-# SpisakApp
+# NašSpisak
 
 Mobilna web aplikacija za zajedničku nabavku, napravljena u Next.js App Routeru, TypeScriptu i Tailwind CSS-u. Interfejs koristi prilagođene shadcn/ui komponente. Podaci se čuvaju u SQLite bazi na serveru.
 

@@ -1,8 +1,9 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  ArrowDown, ArrowLeft, ArrowUpRight, Check, CheckCheck, ChevronDown, ChevronRight,
+  ArrowDown, ArrowUpRight, Check, CheckCheck, ChevronDown, ChevronRight,
   CirclePlus, ClipboardList, FolderClosed, FolderOpen, FolderPlus, ListChecks,
   Moon, Sun, LogIn, LogOut, MoreHorizontal, Pencil, Plus, RotateCw, ShoppingBag,
   Trash2, UserRound, UsersRound, Wifi, WifiOff, X
@@ -350,8 +351,8 @@ export function ShoppingApp() {
     <div className="min-h-svh lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-svh flex-col border-r border-[#e1e6da] dark:border-border bg-[#f1f4ec] px-5 pt-7 pb-5 lg:flex">
         <button className="flex items-center gap-3 rounded-xl text-left" onClick={overview}>
-          <span className="grid size-11 place-items-center rounded-[14px] bg-primary text-primary-foreground"><ShoppingBag size={21} /></span>
-          <span><span className="block text-[19px] leading-none font-black tracking-tight">SpisakApp</span><span className="text-xs text-muted-foreground">Zajednička kupovina</span></span>
+          <Image src="/icon-nas-spisak.svg" width={44} height={44} alt="" className="shrink-0" unoptimized />
+          <span><span className="block text-[19px] leading-none font-black tracking-tight">NašSpisak</span><span className="text-xs text-muted-foreground">Zajednička kupovina</span></span>
         </button>
         <Button className="mt-9 w-full justify-start" onClick={() => setPanel({ type: "create", scope: "list", folderId: folder?.owner ? folder.id : undefined })}><Plus /> Novi spisak</Button>
         <nav aria-label="Spiskovi i folderi" className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto">
@@ -375,8 +376,9 @@ export function ShoppingApp() {
         <header className="border-b border-[#e7eadf] dark:border-border bg-[#fafaf5]">
           <div className="mx-auto flex min-h-[67px] max-w-[1000px] items-center justify-between gap-3 px-4 sm:px-8">
             <div className="flex min-w-0 items-center gap-2 text-sm">
-              <button onClick={overview} className="flex min-h-10 min-w-0 items-center gap-2 rounded-lg font-bold text-[#415547] dark:text-accent-foreground hover:text-primary">
-                {view.scope === "overview" ? <ShoppingBag size={17} /> : <ArrowLeft size={17} />}<span className="truncate">{view.scope === "overview" ? "SpisakApp" : "Svi spiskovi"}</span>
+              <button onClick={overview} aria-label="NašSpisak · Svi spiskovi" className="flex min-h-10 min-w-0 items-center gap-2 rounded-lg font-bold text-[#415547] dark:text-accent-foreground hover:text-primary">
+                <Image src="/icon-nas-spisak.svg" width={32} height={32} alt="" className="shrink-0" unoptimized />
+                <span className="truncate">NašSpisak</span>
               </button>
               {parent && <><ChevronRight size={14} className="shrink-0 text-[#879386] dark:text-accent-foreground" /><button onClick={() => open("folder", parent.id)} className="hidden min-h-10 truncate text-muted-foreground hover:text-primary min-[400px]:block">{parent.name}</button></>}
             </div>
