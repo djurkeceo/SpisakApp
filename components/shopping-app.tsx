@@ -163,6 +163,34 @@ export function ShoppingApp() {
     }
   }, [shopping]);
 
+  const removing = useRef(new Set<string>());
+
+  async function removeItem(item: Item) {
+    if (removing.current.has(item.id)) return;
+    removing.current.add(item.id);
+    const row = document.getElementById("item-" + item.id);
+    let exit: Animation | undefined;
+    try {
+      if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const height = row.getBoundingClientRect().height + "px";
+        const margin = getComputedStyle(row).marginTop;
+        exit = row.animate([
+          { height, minHeight: "0px", marginTop: margin, opacity: 1, overflow: "hidden" },
+          { height, minHeight: "0px", marginTop: margin, opacity: 0.35, overflow: "hidden", offset: 0.32 },
+          { height: "0px", minHeight: "0px", marginTop: "0px", opacity: 0, overflow: "hidden" }
+        ], { duration: 420, easing: "cubic-bezier(.42,0,.18,1)", fill: "forwards" });
+        await exit.finished;
+      }
+      await run({ action: "remove", listId: item.listId, id: item.id });
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "Namirnica nije obrisana.");
+    } finally {
+      removing.current.delete(item.id);
+      // Let React commit the updated list before releasing the exit styles.
+      requestAnimationFrame(() => exit?.cancel());
+    }
+  }
+
   function itemRow(item: Item) {
     return (
       <li id={"item-" + item.id} key={item.id} className="grocery-row relative group flex min-h-[72px] items-center gap-2 border-b border-[#edf0e8] px-2 last:border-b-0 sm:px-3">
@@ -179,7 +207,7 @@ export function ShoppingApp() {
             <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-10 text-muted-foreground" aria-label={`Opcije za ${item.name}`}><MoreHorizontal /></Button></DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {list.permissions.edit && <DropdownMenuItem onSelect={() => setPanel({ type: "item", listId: list.id, item })}><Pencil /> Izmeni</DropdownMenuItem>}
-              {list.permissions.remove && <DropdownMenuItem className="text-red-700" onSelect={() => void run({ action: "remove", listId: list.id, id: item.id }).catch((error: Error) => setNotice(error.message))}><Trash2 /> Obriši namirnicu</DropdownMenuItem>}
+              {list.permissions.remove && <DropdownMenuItem className="text-red-700" onSelect={() => void removeItem(item)}><Trash2 /> Obriši namirnicu</DropdownMenuItem>}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
