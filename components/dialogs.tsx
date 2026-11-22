@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Check, Copy, FolderOpen, Link2, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,6 +36,35 @@ function PermissionFields({ value, onChange, prefix }: { value: Permissions; onC
 export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
   panel: Panel; close: () => void; run: Run; onCreated: (scope: Scope, id: string) => void; acceptToken: string;
 }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const content = contentRef.current;
+    if (panel.type !== "auth" || !viewport || !content) return;
+    function resize() {
+      if (!viewport || !content) return;
+      content.style.setProperty("--visible-height", viewport.height + "px");
+      const inset = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+      content.style.setProperty("--keyboard-inset", inset + "px");
+      const field = document.activeElement;
+      if (field instanceof HTMLInputElement && content.contains(field)) {
+        const bounds = field.getBoundingClientRect();
+        const box = content.getBoundingClientRect();
+        if (bounds.bottom > box.bottom - 12) content.scrollTop += bounds.bottom - box.bottom + 12;
+        if (bounds.top < box.top + 12) content.scrollTop -= box.top - bounds.top + 12;
+      }
+    }
+    resize();
+    viewport.addEventListener("resize", resize);
+    viewport.addEventListener("scroll", resize);
+    return () => {
+      viewport.removeEventListener("resize", resize);
+      viewport.removeEventListener("scroll", resize);
+    };
+  }, [panel.type]);
+
   const [register, setRegister] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -98,8 +127,17 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
 
   return (
     <Dialog open onOpenChange={(open: boolean) => { if (!open && !busy) close(); }}>
-      <DialogContent>
-        <DialogTitle className="pr-10 text-2xl font-bold tracking-tight">{title}</DialogTitle>
+      <DialogContent
+        ref={contentRef}
+        className={panel.type === "auth" ? "auth-dialog" : undefined}
+        onOpenAutoFocus={event => {
+          if (panel.type === "auth" && window.matchMedia("(pointer: coarse), (max-width: 639px)").matches) {
+            event.preventDefault();
+            titleRef.current?.focus({ preventScroll: true });
+          }
+        }}
+      >
+        <DialogTitle ref={titleRef} tabIndex={-1} className="pr-10 text-2xl font-bold tracking-tight">{title}</DialogTitle>
         <DialogDescription className="mt-1.5 pr-7 text-sm leading-relaxed text-muted-foreground">{description}</DialogDescription>
         {panel.type === "share" ? (
           <div className="mt-6 grid gap-4">

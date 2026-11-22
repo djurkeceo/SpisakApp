@@ -140,3 +140,16 @@ button.bg-primary {
   [role="dialog"] label:has([data-state="checked"]) { background-color: var(--accent); }
   [role="status"] .lucide-rotate-cw { animation: spin 1.3s linear 3; }
 }
+
+@media (max-width: 639px), (pointer: coarse) {
+  .auth-dialog {
+    top: auto;
+    bottom: var(--keyboard-inset, 0px);
+    translate: none;
+    max-height: calc(var(--visible-height, 100dvh) - 12px);
+    overscroll-behavior: contain;
+  }
+}
+@media (min-width: 640px) and (pointer: coarse) {
+  .auth-dialog { translate: -50% 0; }
+}
