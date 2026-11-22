@@ -163,7 +163,7 @@ export function ShoppingApp() {
     }
   }, [shopping]);
 
-  const emptyTransition = useRef<{ listId: string; height: number } | null>(null);
+  const emptyTransition = useRef<{ listId: string; height: number; buttonTop?: number } | null>(null);
   const emptyRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const previous = emptyTransition.current;
@@ -171,6 +171,19 @@ export function ShoppingApp() {
     const box = emptyRef.current;
     if (!previous || previous.listId !== list?.id || !box ||
         window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(pointer: coarse)").matches) {
+      const timing = { duration: 380, easing: "cubic-bezier(.22,.61,.36,1)" };
+      box.animate([
+        { opacity: 0, transform: "translateY(5px)" },
+        { opacity: 1, transform: "translateY(0)" }
+      ], timing);
+      const button = document.getElementById("add-grocery-anchor");
+      if (button && previous.buttonTop !== undefined) {
+        const delta = previous.buttonTop - button.getBoundingClientRect().top;
+        button.animate([{ transform: "translateY(" + delta + "px)" }, { transform: "translateY(0)" }], timing);
+      }
+      return;
+    }
     const target = box.getBoundingClientRect().height;
     box.animate([
       { height: previous.height + "px", opacity: 0, overflow: "hidden" },
@@ -189,7 +202,10 @@ export function ShoppingApp() {
       if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const height = row.getBoundingClientRect().height + "px";
         const margin = getComputedStyle(row).marginTop;
-        exit = row.animate([
+        const mobileLast = shopping.length === 1 && window.matchMedia("(pointer: coarse)").matches;
+        exit = mobileLast && groceriesRef.current ? groceriesRef.current.animate([
+          { opacity: 1 }, { opacity: 0.12 }
+        ], { duration: 260, easing: "ease-out", fill: "forwards" }) : row.animate([
           { height, minHeight: "0px", marginTop: margin, opacity: 1, overflow: "hidden" },
           { height, minHeight: "0px", marginTop: margin, opacity: 0.35, overflow: "hidden", offset: 0.32 },
           { height: "0px", minHeight: "0px", marginTop: "0px", opacity: 0, overflow: "hidden" }
@@ -197,7 +213,7 @@ export function ShoppingApp() {
         await exit.finished;
       }
       if (groceriesRef.current) {
-        emptyTransition.current = { listId: item.listId, height: groceriesRef.current.getBoundingClientRect().height };
+        emptyTransition.current = { listId: item.listId, height: groceriesRef.current.getBoundingClientRect().height, buttonTop: document.getElementById("add-grocery-anchor")?.getBoundingClientRect().top };
       }
       await run({ action: "remove", listId: item.listId, id: item.id });
     } catch (error) {
@@ -359,7 +375,7 @@ export function ShoppingApp() {
               {canAdd && <p className="mt-1 text-sm text-muted-foreground">Pritisni + da dodaš prvu namirnicu.</p>}
             </div></div>}
             {canAdd && (
-              <div className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
+              <div id="add-grocery-anchor" className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
                 <Button
                   type="button"
                   aria-label="Dodaj namirnicu"
