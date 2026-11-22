@@ -36,13 +36,14 @@ function PermissionFields({ value, onChange, prefix }: { value: Permissions; onC
 export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
   panel: Panel; close: () => void; run: Run; onCreated: (scope: Scope, id: string) => void; acceptToken: string;
 }) {
+  const mobileForm = panel.type === "auth" || panel.type === "create";
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const viewport = window.visualViewport;
     const content = contentRef.current;
-    if (panel.type !== "auth" || !viewport || !content) return;
+    if (!mobileForm || !viewport || !content) return;
     function resize() {
       if (!viewport || !content) return;
       content.style.setProperty("--visible-height", viewport.height + "px");
@@ -63,7 +64,7 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
       viewport.removeEventListener("resize", resize);
       viewport.removeEventListener("scroll", resize);
     };
-  }, [panel.type]);
+  }, [mobileForm]);
 
   const [register, setRegister] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -129,9 +130,9 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
     <Dialog open onOpenChange={(open: boolean) => { if (!open && !busy) close(); }}>
       <DialogContent
         ref={contentRef}
-        className={panel.type === "auth" ? "auth-dialog" : undefined}
+        className={mobileForm ? "mobile-form-dialog" : undefined}
         onOpenAutoFocus={event => {
-          if (panel.type === "auth" && window.matchMedia("(pointer: coarse), (max-width: 639px)").matches) {
+          if (mobileForm && window.matchMedia("(pointer: coarse), (max-width: 639px)").matches) {
             event.preventDefault();
             titleRef.current?.focus({ preventScroll: true });
           }
