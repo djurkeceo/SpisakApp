@@ -163,6 +163,47 @@ export function ShoppingApp() {
     }
   }, [shopping]);
 
+  const pendingAdd = useRef<{ listId: string; ids: Set<string>; height: number } | null>(null);
+
+  const runDialogCommand: typeof run = async command => {
+    if (command.action !== "add") return run(command);
+    const box = groceriesRef.current;
+    if (box && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      pendingAdd.current = { listId: command.listId, ids: new Set(shopping.map(item => item.id)), height: box.getBoundingClientRect().height };
+    }
+    try {
+      return await run(command);
+    } catch (error) {
+      pendingAdd.current = null;
+      throw error;
+    }
+  };
+
+  useLayoutEffect(() => {
+    const pending = pendingAdd.current;
+    if (!pending) return;
+    if (pending.listId !== list?.id) { pendingAdd.current = null; return; }
+    const added = shopping.find(item => !pending.ids.has(item.id));
+    const box = groceriesRef.current;
+    if (!added || !box) return;
+    pendingAdd.current = null;
+    const row = document.getElementById("item-" + added.id);
+    if (!row || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const timing = { duration: 540, easing: "cubic-bezier(.35,0,.2,1)", fill: "backwards" as const };
+    if (!pending.ids.size) {
+      box.animate([
+        { height: pending.height + "px", backgroundColor: "#fff", overflow: "hidden" },
+        { height: box.getBoundingClientRect().height + "px", backgroundColor: "transparent", overflow: "hidden" }
+      ], timing);
+    }
+    const height = row.getBoundingClientRect().height;
+    const margin = getComputedStyle(row).marginTop;
+    row.animate([
+      { height: "0px", minHeight: "0px", marginTop: "0px", opacity: 0, overflow: "hidden" },
+      { height: height + "px", minHeight: "0px", marginTop: margin, opacity: 1, overflow: "hidden" }
+    ], timing);
+  }, [shopping, list?.id]);
+
   const emptyTransition = useRef<{ listId: string; height: number } | null>(null);
   useLayoutEffect(() => {
     const previous = emptyTransition.current;
@@ -424,7 +465,7 @@ export function ShoppingApp() {
           {!isDemo && online && !pending && <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground"><Check size={14} /> Sinhronizacija je aktivna</p>}
         </div>
       </main>
-      {panel && <AppDialog panel={panel} close={() => setPanel(null)} run={run} onCreated={open} acceptToken={invite} />}
+      {panel && <AppDialog panel={panel} close={() => setPanel(null)} run={panel.type === "item" ? runDialogCommand : run} onCreated={open} acceptToken={invite} />}
     </div>
   );
 }
