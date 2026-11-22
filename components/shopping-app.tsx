@@ -163,32 +163,24 @@ export function ShoppingApp() {
     }
   }, [shopping]);
 
-  const emptyTransition = useRef<{ listId: string; height: number; buttonTop?: number } | null>(null);
-  const emptyRef = useRef<HTMLDivElement>(null);
+  const emptyTransition = useRef<{ listId: string; height: number } | null>(null);
   useLayoutEffect(() => {
     const previous = emptyTransition.current;
     emptyTransition.current = null;
-    const box = emptyRef.current;
-    if (!previous || previous.listId !== list?.id || !box ||
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (window.matchMedia("(pointer: coarse)").matches) {
-      const timing = { duration: 380, easing: "cubic-bezier(.22,.61,.36,1)" };
-      box.animate([
-        { opacity: 0, transform: "translateY(5px)" },
-        { opacity: 1, transform: "translateY(0)" }
-      ], timing);
-      const button = document.getElementById("add-grocery-anchor");
-      if (button && previous.buttonTop !== undefined) {
-        const delta = previous.buttonTop - button.getBoundingClientRect().top;
-        button.animate([{ transform: "translateY(" + delta + "px)" }, { transform: "translateY(0)" }], timing);
-      }
-      return;
-    }
+    const box = groceriesRef.current;
+    if (shopping.length || !previous || previous.listId !== list?.id || !box) return;
+    box.getAnimations().filter(animation => animation.id === "last-row-exit").forEach(animation => animation.cancel());
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const target = box.getBoundingClientRect().height;
     box.animate([
-      { height: previous.height + "px", opacity: 0, overflow: "hidden" },
-      { height: target + "px", opacity: 1, overflow: "hidden" }
-    ], { duration: 460, easing: "cubic-bezier(.42,0,.18,1)" });
+      { height: previous.height + "px", backgroundColor: "#edf2ec", overflow: "hidden" },
+      { height: target + "px", backgroundColor: "#fff", overflow: "hidden" }
+    ], { duration: 600, easing: "cubic-bezier(.35,0,.2,1)" });
+    box.firstElementChild?.animate([
+      { opacity: 0, transform: "translateY(5px)", offset: 0 },
+      { opacity: 0, transform: "translateY(5px)", offset: .25 },
+      { opacity: 1, transform: "translateY(0)" }
+    ], { duration: 600, easing: "ease-in-out" });
   }, [shopping.length, list?.id]);
 
   const removing = useRef(new Set<string>());
@@ -202,10 +194,19 @@ export function ShoppingApp() {
       if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
         const height = row.getBoundingClientRect().height + "px";
         const margin = getComputedStyle(row).marginTop;
-        const mobileLast = shopping.length === 1 && window.matchMedia("(pointer: coarse)").matches;
-        exit = mobileLast && groceriesRef.current ? groceriesRef.current.animate([
-          { opacity: 1 }, { opacity: 0.12 }
-        ], { duration: 260, easing: "ease-out", fill: "forwards" }) : row.animate([
+        const box = groceriesRef.current;
+        const last = shopping.length === 1 && box;
+        if (last) {
+          for (const group of box.children) {
+            group.animate([{ opacity: 1 }, { opacity: 0 }], {
+              id: "last-group-exit", duration: 220, fill: "forwards"
+            });
+          }
+        }
+        exit = last ? box.animate([
+          { height: box.getBoundingClientRect().height + "px", backgroundColor: "transparent", overflow: "hidden" },
+          { height: "72px", backgroundColor: "#edf2ec", overflow: "hidden" }
+        ], { id: "last-row-exit", duration: 360, easing: "ease-in-out", fill: "forwards" }) : row.animate([
           { height, minHeight: "0px", marginTop: margin, opacity: 1, overflow: "hidden" },
           { height, minHeight: "0px", marginTop: margin, opacity: 0.35, overflow: "hidden", offset: 0.32 },
           { height: "0px", minHeight: "0px", marginTop: "0px", opacity: 0, overflow: "hidden" }
@@ -213,7 +214,7 @@ export function ShoppingApp() {
         await exit.finished;
       }
       if (groceriesRef.current) {
-        emptyTransition.current = { listId: item.listId, height: groceriesRef.current.getBoundingClientRect().height, buttonTop: document.getElementById("add-grocery-anchor")?.getBoundingClientRect().top };
+        emptyTransition.current = { listId: item.listId, height: groceriesRef.current.getBoundingClientRect().height };
       }
       await run({ action: "remove", listId: item.listId, id: item.id });
     } catch (error) {
@@ -222,7 +223,12 @@ export function ShoppingApp() {
     } finally {
       removing.current.delete(item.id);
       // Let React commit the updated list before releasing the exit styles.
-      requestAnimationFrame(() => exit?.cancel());
+      requestAnimationFrame(() => {
+        exit?.cancel();
+        groceriesRef.current?.querySelectorAll(":scope > section").forEach(group => {
+          group.getAnimations().filter(animation => animation.id === "last-group-exit").forEach(animation => animation.cancel());
+        });
+      });
     }
   }
 
@@ -360,7 +366,8 @@ export function ShoppingApp() {
             <div className="mt-6 flex items-center justify-between gap-3 sm:mt-8">
               <h2 className="text-2xl font-black tracking-[-.035em]">Namirnice</h2>
             </div>
-            {shopping.length > 0 ? <div ref={groceriesRef} className="mt-3 grid auto-rows-max content-start gap-4">
+            <div ref={groceriesRef} className={cn("mt-3 grid auto-rows-max content-start gap-4 rounded-[20px]", !shopping.length && "bg-white")}>
+              {shopping.length > 0 ? <>
               <section className="rounded-[20px] border border-[#e4e8dc] bg-background px-3 pb-1 sm:px-4">
                 <h3 className="flex items-center gap-2 border-b border-[#edf0e8] px-2 py-3.5 text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#f6ebdb] text-[#8b5c27]"><ShoppingBag size={15} /></span> Za kupiti <span className="rounded-md bg-[#f0f3eb] px-1.5 py-0.5 text-xs text-muted-foreground">{remaining.length}</span></h3>
                 {remaining.length ? <ul>{remaining.map(itemRow)}</ul> : <p className="px-3 py-5 text-sm text-muted-foreground">Sve sa spiska je kupljeno.</p>}
@@ -369,11 +376,12 @@ export function ShoppingApp() {
                 <button id="completed-heading" type="button" onClick={() => setHideChecked(!hideChecked)} aria-expanded={!hideChecked} className="flex w-full items-center gap-2 border-b border-[#edf0e8] px-2 py-3.5 text-left text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#e6efe1] text-[#436848]"><CheckCheck size={16} /></span> Kupljeno <span className="rounded-md bg-[#f0f3eb] px-1.5 py-0.5 text-xs text-muted-foreground">{completed.length}</span><ArrowDown size={15} className={cn("ml-auto text-muted-foreground", hideChecked && "-rotate-90")} /></button>
                 {!hideChecked && <ul>{completed.map(itemRow)}</ul>}
               </section>}
-            </div> : <div ref={emptyRef} className="mt-3"><div className="grid justify-items-center rounded-[20px] border border-dashed border-border bg-background px-4 py-10 text-center">
+            </> : <div className="grid justify-items-center rounded-[20px] border border-border px-4 py-10 text-center">
               <span className="mb-3 grid size-12 place-items-center rounded-2xl bg-accent text-primary"><ShoppingBag size={23} /></span>
               <p className="font-bold">Spisak je prazan</p>
               {canAdd && <p className="mt-1 text-sm text-muted-foreground">Pritisni + da dodaš prvu namirnicu.</p>}
-            </div></div>}
+            </div>}
+            </div>
             {canAdd && (
               <div id="add-grocery-anchor" className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
                 <Button
