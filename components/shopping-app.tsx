@@ -189,7 +189,7 @@ export function ShoppingApp() {
   const ownedTarget = list?.owner ? { scope: "list" as const, ...list } : folder?.owner ? { scope: "folder" as const, ...folder } : null;
   const visibleLists = folder ? data.lists.filter(row => row.folderId === folder.id) : data.lists;
   const canAdd = list?.permissions.add ?? false;
-  const addDisabled = !online && !isDemo;
+
 
   return (
     <div className="min-h-svh lg:grid lg:grid-cols-[252px_minmax(0,1fr)]">
@@ -236,7 +236,7 @@ export function ShoppingApp() {
           className="sync-status pointer-events-none fixed right-3 z-30 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-2xl border border-white/70 bg-[#faeddb] px-4 py-3 text-sm text-[#644321] shadow-md sm:right-6"
         >
           {syncStatus.online ? <RotateCw size={16} className="shrink-0" /> : <WifiOff size={16} className="shrink-0" />}
-          {syncStatus.pending ? `Izmene na čekanju: ${syncStatus.pending}` : "Bez interneta. Kupljene stavke i dalje možeš da označiš."}
+          {syncStatus.pending ? `Izmene na čekanju: ${syncStatus.pending}` : "Bez interneta. Izmene se čuvaju na uređaju."}
         </div>
 
         <div key={list?.id ?? folder?.id ?? view.scope} className="shopping-view mx-auto w-full max-w-[1000px] px-4 pt-5 pb-8 sm:px-8 sm:pt-8">
@@ -292,7 +292,6 @@ export function ShoppingApp() {
                   aria-label="Dodaj namirnicu"
                   aria-haspopup="dialog"
                   title="Dodaj namirnicu"
-                  disabled={addDisabled}
                   className="pointer-events-auto size-16 rounded-full shadow-lg [&_svg]:size-8"
                   onClick={() => setPanel({ type: "item", listId: list.id })}
                 >

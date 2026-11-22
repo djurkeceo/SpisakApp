@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { demo } from "./demo";
 import type { Dashboard, Item, Permissions, Scope } from "./types";
 
-type Check = { listId: string; id: string; checked: boolean; changeId: string };
+type LegacyCheck = { listId: string; id: string; checked: boolean; changeId: string };
 export type Member = { id: string; email: string; permissions: Permissions };
 type ItemFields = Pick<Item, "name" | "quantity" | "note">;
 type Command =
@@ -22,6 +22,9 @@ type Command =
   | { action: "grant"; id: string; scope: Scope; userId: string; permissions: Permissions }
   | { action: "revoke"; id: string; scope: Scope; userId: string };
 
+type Mutation = Extract<Command, { action: "add" | "edit" | "remove" | "check" | "createList" | "createFolder" | "rename" }>;
+type Queued = { command: Mutation; changeId: string; entityId: string };
+
 class RequestError extends Error {
   constructor(message: string, public status: number) { super(message); }
 }
@@ -36,9 +39,13 @@ function writeLocal(key: string, data: unknown) {
   try { localStorage.setItem(key, JSON.stringify(data)); return true; }
   catch { return false; }
 }
-const readQueue = (userId: string) => readLocal<Check[]>(queueKey(userId)) ?? [];
+function readQueue(userId: string): Queued[] {
+  return (readLocal<(LegacyCheck | Queued)[]>(queueKey(userId)) ?? []).map(op =>
+    "command" in op ? op : { command: { action: "check", ...op }, changeId: op.changeId, entityId: op.id }
+  );
+}
 
-async function post<T>(command: Command): Promise<T> {
+async function post<T>(command: Command & { operationId?: string; entityId?: string; accountId?: string }): Promise<T> {
   const response = await fetch("/api/app", {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(command)
   });
@@ -47,8 +54,8 @@ async function post<T>(command: Command): Promise<T> {
   return data as T;
 }
 
-function demoCommand(state: Dashboard, command: Command): { data: Dashboard; id?: string } {
-  const id = globalThis.crypto?.randomUUID?.() || "demo-" + Date.now() + "-" + Math.random();
+function applyLocal(state: Dashboard, command: Command, entityId?: string): { data: Dashboard; id?: string } {
+  const id = entityId || globalThis.crypto?.randomUUID?.() || "demo-" + Date.now() + "-" + Math.random();
   switch (command.action) {
     case "createList":
       return { id, data: { ...state, lists: [...state.lists, { id, name: command.name, folderId: command.folderId, owner: true, permissions: { add: true, edit: true, remove: true } }] } };
@@ -75,7 +82,7 @@ export function useShopping() {
   const [data, setData] = useState<Dashboard>(demo);
   const [online, setOnline] = useState(true);
   const [ready, setReady] = useState(false);
-  const [queue, setQueue] = useState<Check[]>([]);
+  const [queue, setQueue] = useState<Queued[]>([]);
   const [notice, setNotice] = useState("");
   const current = useRef(demo);
   const etag = useRef("");
@@ -122,9 +129,9 @@ export function useShopping() {
         const [op] = readQueue(userId);
         if (!op) break;
         try {
-          await post({ action: "check", ...op });
+          await post({ ...op.command, operationId: op.changeId, entityId: op.entityId, accountId: userId });
         } catch (error) {
-          if (!(error instanceof RequestError) || ![403, 404].includes(error.status)) break;
+          if (!(error instanceof RequestError) || ![400, 403, 404, 409].includes(error.status)) break;
           setNotice(error.message);
         }
         const next = readQueue(userId).filter(check => check.changeId !== op.changeId);
@@ -145,7 +152,12 @@ export function useShopping() {
     setOnline(navigator.onLine);
     setReady(true);
     if (process.env.NODE_ENV === "production" && "serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js").catch(() => {});
+      const assets = Array.from(document.querySelectorAll('script[src*="/_next/static/"], link[href*="/_next/static/"]'),
+        tag => tag.getAttribute("src") || tag.getAttribute("href")).join("|");
+      void crypto.subtle.digest("SHA-256", new TextEncoder().encode(assets)).then(bytes => {
+        const version = Array.from(new Uint8Array(bytes), byte => byte.toString(16).padStart(2, "0")).join("");
+        return navigator.serviceWorker.register("/sw.js?build=" + version);
+      }).catch(() => {});
     }
     function sync() {
       setOnline(navigator.onLine);
@@ -190,20 +202,20 @@ export function useShopping() {
       return {};
     }
     if (current.current.user.id === "demo") {
-      const result = demoCommand(current.current, command);
+      const result = applyLocal(current.current, command);
       update(result.data);
       return { id: result.id };
     }
-    if (command.action === "check") {
+    if (command.action === "check" || ((!navigator.onLine || readQueue(current.current.user.id).length > 0) &&
+        (command.action === "createFolder" || command.action === "createList" || command.action === "rename" ||
+         command.action === "add" || command.action === "edit" || command.action === "remove"))) {
       const userId = current.current.user.id;
-      const next = [
-        ...readQueue(userId).filter(op => op.id !== command.id),
-        { id: command.id, listId: command.listId, checked: Boolean(command.checked), changeId: globalThis.crypto?.randomUUID?.() || String(Date.now()) + Math.random() }
-      ];
+      const entityId = "id" in command ? command.id : crypto.randomUUID();
+      const next = [...readQueue(userId), { command, entityId, changeId: crypto.randomUUID() }];
       if (!writeLocal(queueKey(userId), next)) throw new Error("Telefon nije mogao da sačuva promenu.");
       setQueue(next);
       void flush();
-      return {};
+      return { id: entityId };
     }
     if (!navigator.onLine) throw new Error("Poveži se na internet za ovu izmenu.");
     const result = await post<{ id?: string; token?: string; scope?: Scope; members?: Member[] }>(command);
@@ -211,7 +223,12 @@ export function useShopping() {
     return result;
   }, [flush, refresh, update]);
 
-  const pending = new Map(queue.map(op => [op.id, op.checked]));
-  const items = data.items.map(item => pending.has(item.id) ? { ...item, checked: pending.get(item.id)! } : item);
-  return { data, items, online, ready, pending: queue.length, run, notice, setNotice };
+  const visible = queue.reduce((state, op) => {
+    const { command, entityId } = op;
+    if (command.action === "add" && state.items.some(item => item.id === entityId)) return state;
+    if (command.action === "createList" && state.lists.some(list => list.id === entityId)) return state;
+    if (command.action === "createFolder" && state.folders.some(folder => folder.id === entityId)) return state;
+    return applyLocal(state, command, entityId).data;
+  }, data);
+  return { data: visible, items: visible.items, online, ready, pending: queue.length, run, notice, setNotice };
 }

@@ -1,11 +1,12 @@
-const CACHE = "spisak-shell-v1";
+const CACHE = "spisak-shell-v2-" + (new URL(self.location.href).searchParams.get("build") || "default");
 const isShellAsset = path => path.startsWith("/_next/static/") || path.startsWith("/icon-");
 
 self.addEventListener("install", event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
     const response = await fetch("/", { cache: "reload" });
-    if (response.ok) {
+    if (!response.ok) throw new Error("Offline shell unavailable");
+    {
       const html = await response.clone().text();
       const assets = [...new Set(html.match(/\/_next\/static\/[^"'\s<>\\]+\.(?:js|css)(?=["'\s<>])/g) || [])];
       await cache.addAll(assets);
@@ -29,7 +30,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   if (request.method !== "GET" || url.origin !== self.location.origin) return;
   if (request.mode === "navigate" && url.pathname === "/") {
-    event.respondWith(fetch(request).catch(async () => (await caches.match("/")) || Response.error()));
+    event.respondWith(fetch(request).catch(async () => (await (await caches.open(CACHE)).match("/")) || Response.error()));
   } else if (isShellAsset(url.pathname)) {
     event.respondWith((async () => {
       const cache = await caches.open(CACHE);

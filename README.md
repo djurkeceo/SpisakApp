@@ -28,7 +28,7 @@ Na računaru radi preko localhost adrese. Za test na više telefona koristi jedn
 - Poziv za folder daje pristup postojećim i budućim spiskovima u njemu. Kada osoba ima i direktan pristup spisku, dozvole za spisak imaju prednost nad dozvolama iz foldera. Uklanjanje direktnog pristupa može ostaviti pristup preko foldera.
 - Aktivne kartice traže izmene otprilike na 1,6 sekundi. Izmene se traže i pri povratku na karticu ili ponovnom povezivanju.
 - U nedostatku interneta čekiranje se odmah vidi i upisuje u trajni lokalni red. Po povratku veze šalje se eksplicitni status stavke. Poslednji status koji server prihvati važi kada oba korisnika menjaju istu oznaku. Izmene količine ili napomene ostaju sačuvane. Ako je stavka izbrisana ili je ukinut pristup, aplikacija prikazuje obaveštenje.
-- Brisanje stavke i izmene njenih detalja traže vezu. Lokalna kopija spiska dostupna je na onom pregledaču koji ga je već učitao.
+- Dodavanje, izmena, brisanje i čekiranje namirnica, kao i kreiranje i preimenovanje spiskova i foldera, rade bez veze uz lokalni red za sinhronizaciju. Lokalna kopija spiska dostupna je na onom pregledaču koji ga je već učitao.
 
 ## Server
 
