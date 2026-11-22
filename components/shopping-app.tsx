@@ -240,6 +240,7 @@ export function ShoppingApp() {
           <Checkbox checked={item.checked} onCheckedChange={(value: boolean | "indeterminate") => toggle(item, value === true)} aria-label={item.name} className={cn("size-[23px] rounded-[7px]", item.checked ? "data-[state=checked]:border-[#dfead9] data-[state=checked]:bg-[#dfead9] [&_svg]:text-[#3d6340]" : "border-[#c8d3c4]")} />
           <span className="min-w-0 break-words">
             <span className={cn("block text-[15px] font-bold", item.checked && "text-muted-foreground line-through")}>{item.name}</span>
+            {list?.shared && item.checked && item.purchasedBy && <span className="block break-all text-xs text-muted-foreground">Kupio/la: {item.purchasedBy}</span>}
             {item.note && <span className="block text-xs leading-relaxed text-muted-foreground">{item.note}</span>}
           </span>
         </label>

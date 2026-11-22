@@ -28,6 +28,7 @@ async function connect() {
     CREATE TABLE IF NOT EXISTS folders (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES users(id), name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS lists (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES users(id), folder_id TEXT REFERENCES folders(id) ON DELETE CASCADE, name TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS items (id TEXT PRIMARY KEY, list_id TEXT NOT NULL REFERENCES lists(id) ON DELETE CASCADE, name TEXT NOT NULL, quantity TEXT NOT NULL, note TEXT NOT NULL, checked INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE IF NOT EXISTS purchases (item_id TEXT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE, user_id TEXT NOT NULL REFERENCES users(id));
     CREATE TABLE IF NOT EXISTS grants (scope TEXT NOT NULL, target_id TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id), flags INTEGER NOT NULL, PRIMARY KEY (scope, target_id, user_id));
     CREATE TABLE IF NOT EXISTS invites (key TEXT PRIMARY KEY, scope TEXT NOT NULL, target_id TEXT NOT NULL, flags INTEGER NOT NULL, expires INTEGER NOT NULL, accepted_by TEXT REFERENCES users(id));
     CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, start INTEGER NOT NULL, count INTEGER NOT NULL);
@@ -86,7 +87,7 @@ export async function ownerOf(db: Connection, scope: Scope, id: string) {
 }
 
 const accessQuery = `
-  SELECT l.*, (l.owner_id = ?) AS owned, COALESCE(d.flags, f.flags, 0) AS flags
+  SELECT l.rowid AS position, l.*, (l.owner_id = ?) AS owned, COALESCE(d.flags, f.flags, 0) AS flags
   FROM lists l
   LEFT JOIN grants d ON d.scope = 'list' AND d.target_id = l.id AND d.user_id = ?
   LEFT JOIN grants f ON f.scope = 'folder' AND f.target_id = l.folder_id AND f.user_id = ?
@@ -106,17 +107,18 @@ export async function snapshot(db: Connection, user: User): Promise<Dashboard> {
     WHERE f.owner_id = ? OR g.user_id IS NOT NULL ORDER BY f.rowid
   `, user.id, user.id, user.id)).map(row => ({ id: String(row.id), name: String(row.name), owner: Boolean(row.owned) }));
   const visibleFolders = new Set(folders.map(folder => folder.id));
-  const rows = await allRows(db, accessQuery + " ORDER BY l.rowid", user.id, user.id, user.id, user.id);
+  const rows = await allRows(db, `SELECT v.*, EXISTS(SELECT 1 FROM grants g WHERE (g.scope = 'list' AND g.target_id = v.id) OR (g.scope = 'folder' AND g.target_id = v.folder_id)) AS shared FROM (${accessQuery}) v ORDER BY v.position`, user.id, user.id, user.id, user.id);
   const lists = rows.map(row => ({
     id: String(row.id), name: String(row.name),
     folderId: row.folder_id && visibleFolders.has(String(row.folder_id)) ? String(row.folder_id) : null,
-    owner: Boolean(row.owned),
+    owner: Boolean(row.owned), shared: Boolean(row.shared),
     permissions: row.owned ? flagsToPermissions(7) : flagsToPermissions(Number(row.flags))
   }));
-  const visibleItems = await allRows(db, `SELECT i.* FROM items i JOIN (${accessQuery}) visible ON visible.id = i.list_id ORDER BY i.rowid`, user.id, user.id, user.id, user.id);
+  const visibleItems = await allRows(db, `SELECT i.*, buyer.email AS buyer FROM items i LEFT JOIN purchases p ON p.item_id = i.id LEFT JOIN users buyer ON buyer.id = p.user_id JOIN (${accessQuery}) visible ON visible.id = i.list_id ORDER BY i.rowid`, user.id, user.id, user.id, user.id);
   const items = visibleItems.map(row => ({
     id: String(row.id), listId: String(row.list_id), name: String(row.name), quantity: String(row.quantity),
-    note: String(row.note), checked: Boolean(row.checked)
+    note: String(row.note), checked: Boolean(row.checked),
+    ...(row.checked && row.buyer ? { purchasedBy: String(row.buyer) } : {})
   }));
   return { user, folders, lists, items };
 }

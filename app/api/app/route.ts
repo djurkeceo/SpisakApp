@@ -202,7 +202,12 @@ export async function POST(req: NextRequest) {
         const item = await first(db, "SELECT id FROM items WHERE id = ? AND list_id = ?", cmd.id, cmd.listId);
         if (!item) return fail("Namirnica više nije na spisku.", 404);
         if (cmd.action === "check") {
-          await execute(db, "UPDATE items SET checked = ? WHERE id = ?", Number(cmd.checked), cmd.id);
+          const changed = await execute(db, "UPDATE items SET checked = ? WHERE id = ? AND checked <> ?", Number(cmd.checked), cmd.id, Number(cmd.checked));
+          if (changed.rowsAffected && cmd.checked) {
+            await execute(db, "INSERT OR REPLACE INTO purchases (item_id, user_id) VALUES (?, ?)", cmd.id, user.id);
+          } else if (!cmd.checked) {
+            await execute(db, "DELETE FROM purchases WHERE item_id = ?", cmd.id);
+          }
           if (cmd.changeId) {
             await execute(db, "DELETE FROM check_receipts WHERE created < ?", Date.now() - 30 * day);
             await execute(db, "INSERT INTO check_receipts VALUES (?, ?, ?)", user.id, cmd.changeId, Date.now());

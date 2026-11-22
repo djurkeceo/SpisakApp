@@ -42,10 +42,15 @@ try {
   await command(b.cookie, "check", mark);
   const bought = (await read(a.cookie)).items[0];
   assert.equal(bought.checked, true);
+  assert.equal(bought.purchasedBy, "b@example.com");
+  assert.equal((await read(b.cookie)).lists[0].shared, true);
+  await command(a.cookie, "check", { ...mark, changeId: "another-mark-1" });
+  assert.equal((await read(b.cookie)).items[0].purchasedBy, "b@example.com");
   assert.equal(bought.quantity, "3 l");
   await command(a.cookie, "check", { ...mark, checked: false });
   await command(b.cookie, "check", mark);
   assert.equal((await read(a.cookie)).items[0].checked, false);
+  assert.equal((await read(b.cookie)).items[0].purchasedBy, undefined);
   await command(a.cookie, "grant", { scope: "folder", id: folder.id, userId: b.user.id, permissions: { add: true, edit: false, remove: false } });
   await command(b.cookie, "add", { ...fields, name: "Jaja" });
   await command(a.cookie, "createList", { name: "Sutra", folderId: folder.id });

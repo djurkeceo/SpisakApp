@@ -72,7 +72,7 @@ function applyLocal(state: Dashboard, command: Command, entityId?: string): { da
     case "remove":
       return { data: { ...state, items: state.items.filter(item => item.id !== command.id) } };
     case "check":
-      return { data: { ...state, items: state.items.map(item => item.id === command.id ? { ...item, checked: Boolean(command.checked) } : item) } };
+      return { data: { ...state, items: state.items.map(item => item.id === command.id && item.checked !== Boolean(command.checked) ? { ...item, checked: Boolean(command.checked), purchasedBy: command.checked ? state.user.email : undefined } : item) } };
     default:
       throw new Error("Za deljenje je potreban nalog.");
   }
