@@ -256,7 +256,7 @@ export function ShoppingApp() {
               {canAdd && <p className="mt-1 text-sm text-muted-foreground">Pritisni + da dodaš prvu namirnicu.</p>}
             </div>}
             {canAdd && (
-              <div className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-end">
+              <div className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
                 <Button
                   type="button"
                   aria-label="Dodaj namirnicu"
