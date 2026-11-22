@@ -36,7 +36,7 @@ function PermissionFields({ value, onChange, prefix }: { value: Permissions; onC
 export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
   panel: Panel; close: () => void; run: Run; onCreated: (scope: Scope, id: string) => void; acceptToken: string;
 }) {
-  const mobileForm = panel.type === "auth" || panel.type === "create";
+  const mobileForm = panel.type === "auth" || panel.type === "create" || (panel.type === "item" && Boolean(panel.item));
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
