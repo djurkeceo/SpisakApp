@@ -26,6 +26,11 @@ export function ShoppingApp() {
   const [hideChecked, setHideChecked] = useState(false);
   const moves = useRef(new Map<string, { positions: Map<string, number>; checked: boolean }>());
   const isDemo = data.user.id === "demo";
+  const showSyncStatus = !isDemo && (!online || pending > 0);
+  const [syncStatus, setSyncStatus] = useState({ online: true, pending: 0 });
+  useEffect(() => {
+    if (showSyncStatus) setSyncStatus({ online, pending });
+  }, [showSyncStatus, online, pending]);
   const list = view.scope === "list" ? data.lists.find(row => row.id === view.id) : undefined;
   const folder = view.scope === "folder" ? data.folders.find(row => row.id === view.id) : undefined;
   const parent = data.folders.find(row => row.id === list?.folderId);
@@ -223,13 +228,22 @@ export function ShoppingApp() {
             <div className="flex shrink-0 items-center gap-2">{accountButton()}</div>
           </div>
         </header>
+        <div
+          role="status"
+          aria-atomic="true"
+          aria-hidden={!showSyncStatus}
+          data-visible={showSyncStatus}
+          className="sync-status pointer-events-none fixed right-3 z-30 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-2xl border border-white/70 bg-[#faeddb] px-4 py-3 text-sm text-[#644321] shadow-md sm:right-6"
+        >
+          {syncStatus.online ? <RotateCw size={16} className="shrink-0" /> : <WifiOff size={16} className="shrink-0" />}
+          {syncStatus.pending ? `Izmene na čekanju: ${syncStatus.pending}` : "Bez interneta. Kupljene stavke i dalje možeš da označiš."}
+        </div>
 
         <div key={list?.id ?? folder?.id ?? view.scope} className="shopping-view mx-auto w-full max-w-[1000px] px-4 pt-5 pb-8 sm:px-8 sm:pt-8">
           {invite && <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#d9e4d6] bg-accent px-4 py-3">
             <span className="flex items-center gap-2 text-sm font-bold"><UsersRound size={17} /> Imaš poziv za deljeni spisak ili folder.</span>
             <div className="flex gap-2"><Button size="sm" disabled={inviteBusy} onClick={() => void accept()}>{isDemo ? "Prijavi se" : "Prihvati poziv"}</Button><Button aria-label="Zatvori poziv" variant="ghost" size="sm" onClick={dismissInvite}><X /></Button></div>
           </div>}
-          {!isDemo && (!online || pending > 0) && <div role="status" className="mb-4 flex items-center gap-2 rounded-xl bg-[#faeddb] px-4 py-3 text-sm text-[#644321]">{online ? <RotateCw size={16} /> : <WifiOff size={16} />}{pending ? `Izmene na čekanju: ${pending}` : "Bez interneta. Kupljene stavke i dalje možeš da označiš."}</div>}
           {notice && <div role="status" className="mb-4 flex items-center justify-between gap-2 rounded-xl border border-border bg-background px-4 py-2 text-sm"><span>{notice}</span><Button variant="ghost" size="sm" aria-label="Skloni obaveštenje" onClick={() => setNotice("")}><X /></Button></div>}
 
           {list ? <>

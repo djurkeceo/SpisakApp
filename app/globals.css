@@ -115,7 +115,7 @@ button.bg-primary {
 
 @media (prefers-reduced-motion: no-preference) {
   aside > nav, main > header, main li:not(.grocery-row), main .border-dashed,
-  [role="status"], [role="alert"] {
+  [role="status"]:not(.sync-status), [role="alert"] {
     animation: view-arrive 190ms ease-out;
   }
 
@@ -152,4 +152,24 @@ button.bg-primary {
 }
 @media (min-width: 640px) and (pointer: coarse) {
   .mobile-form-dialog { translate: -50% 0; }
+}
+
+.sync-status {
+  top: max(.75rem, env(safe-area-inset-top));
+  opacity: 0;
+  visibility: hidden;
+}
+.sync-status[data-visible="true"] {
+  visibility: visible;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .sync-status {
+    transform: translateY(-6px);
+    transition: opacity 230ms ease, transform 280ms ease, visibility 0s linear 280ms;
+  }
+  .sync-status[data-visible="true"] {
+    transform: translateY(0);
+    transition-delay: 160ms, 160ms, 0s;
+  }
 }
