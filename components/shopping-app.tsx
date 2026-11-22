@@ -283,7 +283,14 @@ export function ShoppingApp() {
               </div>
               <div className="mt-6 max-w-[460px] sm:mt-8">
                 <div className="mb-2 flex justify-between gap-2 text-xs font-semibold text-[#ecf5e9]"><span>{completed.length} od {shopping.length} kupljeno</span><span>{percent}%</span></div>
-                <progress aria-label="Napredak kupovine" value={completed.length} max={shopping.length || 1} className="block h-[7px] w-full overflow-hidden rounded-full bg-white/20 [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-[#cce4b5] [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-[#cce4b5]" />
+                <div role="progressbar" aria-label="Napredak kupovine" aria-valuenow={percent}
+                  aria-valuetext={completed.length + " od " + shopping.length + " kupljeno"}
+                  className="h-[7px] w-full overflow-hidden rounded-full bg-white/20">
+                  <div
+                    className="h-full origin-left rounded-full bg-[#cce4b5] motion-safe:transition-transform motion-safe:duration-[600ms] motion-safe:ease-[cubic-bezier(.42,0,.18,1)]"
+                    style={{ transform: "scaleX(" + (shopping.length ? completed.length / shopping.length : 0) + ")" }}
+                  />
+                </div>
               </div>
             </section>
 
