@@ -53,3 +53,7 @@ Ručna provera offline toka:
 4. Na drugom nalogu isključi internet, čekiraj stavku i ponovo otvori aplikaciju. Na prvom nalogu izmeni količinu iste stavke.
 5. Vrati vezu drugom nalogu. Na oba uređaja proveri da je stavka označena i da ima novu količinu.
 6. Podeli folder posebnim pozivom sa trećim nalogom. Dodaj nov spisak u deljeni folder i proveri da se pojavio kod primaoca.
+
+## Vercel i Turso
+
+U produkcijskom okruženju podesite TURSO_DATABASE_URL i TURSO_AUTH_TOKEN sa dozvolom za čitanje i upis. Ponovo objavite aplikaciju. Server kreira tabele pri prvom pristupu bazi. Za lokalni razvoj bez Turso promenljivih koristi se SQLite fajl.
