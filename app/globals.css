@@ -178,26 +178,69 @@ button.bg-primary {
 :root { --empty-panel: #fff; --panel-transition: #edf2ec; }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #19271f;
-  --foreground: #eef5ed;
-  --accent: #2e4234;
-  --accent-foreground: #dcebdc;
-  --primary: #a4d7ac;
-  --primary-foreground: #132c1c;
-  --muted-foreground: #b2c3b5;
-  --border: #425548;
-  --ring: #a4d7ac;
-  --empty-panel: #223329;
-  --panel-transition: #1b2921;
+  --background: #1a201f;
+  --foreground: #eff3f0;
+  --accent: #292f2d;
+  --accent-foreground: #dde5df;
+  --primary: #9fdfa9;
+  --primary-foreground: #142819;
+  --muted-foreground: #adb9b3;
+  --border: #38433e;
+  --ring: #9fdfa9;
+  --empty-panel: #1a201f;
+  --panel-transition: #151a19;
 }
 [data-theme="dark"] body {
-  background: radial-gradient(ellipse at 84% 0%, #254536, transparent 56%), #101a15;
+  background: radial-gradient(ellipse at 75% 0%, #1b2722 0%, transparent 45%), #101413;
 }
 [data-theme="dark"] :is(.min-h-svh > aside, main > header) {
-  background: rgb(22 35 27 / 94%);
+  background: #151a19;
   border-color: var(--border);
 }
-[data-theme="dark"] main section:has(> ul) { background: #19271f; border-color: var(--border); }
-[data-theme="dark"] main section > ul > :is(.group, li > button) { background: #25362a; border-color: var(--border); }
+[data-theme="dark"] .hero-texture {
+  background: radial-gradient(ellipse at 100% 0%, #294739, transparent 70%), #191f1d;
+  box-shadow: inset 0 0 0 1px #466052, 0 14px 32px #0004;
+}
+[data-theme="dark"] .hero-texture .share-list-button {
+  background: #293d32;
+  color: #e1f2e6;
+}
+[data-theme="dark"] .hero-texture .share-list-button:hover { background: #354d40; }
+[data-theme="dark"] .list-overview-heading {
+  background: #191f1d;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+[data-theme="dark"] .grocery-section {
+  background: #171c1b;
+  border-color: var(--border);
+  box-shadow: 0 8px 20px #0002;
+}
+[data-theme="dark"] .grocery-row {
+  background: #212725;
+  border-color: #333e38;
+}
+[data-theme="dark"] .grocery-row:has([data-state="checked"]) { background: #1c2420; }
+[data-theme="dark"] .grocery-row [data-state="checked"] {
+  background: #264434;
+  border-color: #577a62;
+}
+[data-theme="dark"] .grocery-row [data-state="checked"] svg { color: var(--primary); }
+[data-theme="dark"] main section > ul > li > button {
+  background: #1e2422;
+  border-color: var(--border);
+}
 [data-theme="dark"] main section > ul > li > button:hover { background: var(--accent); }
-[data-theme="dark"] .hero-texture { background: linear-gradient(120deg, #244632, #305940); }
+[data-theme="dark"] aside nav button[data-active="true"] {
+  background: #22372a;
+  color: #c3ebca;
+  box-shadow: inset 2px 0 #9fdfa9;
+}
+[data-theme="dark"] .remaining-icon, [data-theme="dark"] .sync-status {
+  background: #352c20;
+  color: #f1ce96;
+}
+[data-theme="dark"] .sync-status { border-color: #5b4833; }
+[data-theme="dark"] .completed-icon {
+  background: #263e30;
+  color: #aee1b8;
+}

@@ -325,7 +325,7 @@ export function ShoppingApp() {
 
   function listLink(row: GroceryList) {
     const active = list?.id === row.id;
-    return <button key={row.id} type="button" onClick={() => open("list", row.id)} aria-current={active ? "page" : undefined} className={cn("flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-[#ebf0e5] dark:hover:bg-accent", active ? "bg-[#e2ebdf] dark:bg-accent font-bold text-[#284d37] dark:text-accent-foreground" : "text-[#4e5a4f] dark:text-accent-foreground")}>
+    return <button key={row.id} type="button" onClick={() => open("list", row.id)} data-active={active} aria-current={active ? "page" : undefined} className={cn("flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm hover:bg-[#ebf0e5] dark:hover:bg-accent", active ? "bg-[#e2ebdf] dark:bg-accent font-bold text-[#284d37] dark:text-accent-foreground" : "text-[#4e5a4f] dark:text-accent-foreground")}>
       <ClipboardList size={16} className="shrink-0" /><span className="min-w-0 flex-1 truncate">{row.name}</span>{!row.owner && <UsersRound size={14} />}
     </button>;
   }
@@ -355,13 +355,13 @@ export function ShoppingApp() {
         </button>
         <Button className="mt-9 w-full justify-start" onClick={() => setPanel({ type: "create", scope: "list", folderId: folder?.owner ? folder.id : undefined })}><Plus /> Novi spisak</Button>
         <nav aria-label="Spiskovi i folderi" className="mt-6 flex min-h-0 flex-1 flex-col overflow-y-auto">
-          <button onClick={overview} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold hover:bg-[#e6ede2] dark:hover:bg-accent", view.scope === "overview" && "bg-[#e2ebdf] dark:bg-accent")}><ListChecks size={17} /> Svi spiskovi</button>
+          <button onClick={overview} data-active={view.scope === "overview"} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold hover:bg-[#e6ede2] dark:hover:bg-accent", view.scope === "overview" && "bg-[#e2ebdf] dark:bg-accent")}><ListChecks size={17} /> Svi spiskovi</button>
           <div className="mt-6 mb-2 flex items-center justify-between pl-3">
             <span className="text-[11px] font-bold tracking-[.14em] text-[#59675b] dark:text-accent-foreground uppercase">Folderi</span>
             <Button variant="ghost" size="icon" className="size-9" aria-label="Novi folder" onClick={() => setPanel({ type: "create", scope: "folder" })}><FolderPlus /></Button>
           </div>
           {data.folders.map(entry => <div key={entry.id} className="mb-3">
-            <button onClick={() => open("folder", entry.id)} className={cn("flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm font-bold hover:bg-[#ebf0e5] dark:hover:bg-accent", folder?.id === entry.id && "bg-[#e2ebdf] dark:bg-accent")}><FolderClosed size={17} className="shrink-0 text-[#5a7259] dark:text-accent-foreground" /> <span className="flex-1 truncate">{entry.name}</span><ChevronDown size={14} className="text-muted-foreground" /></button>
+            <button onClick={() => open("folder", entry.id)} data-active={folder?.id === entry.id} className={cn("flex min-h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm font-bold hover:bg-[#ebf0e5] dark:hover:bg-accent", folder?.id === entry.id && "bg-[#e2ebdf] dark:bg-accent")}><FolderClosed size={17} className="shrink-0 text-[#5a7259] dark:text-accent-foreground" /> <span className="flex-1 truncate">{entry.name}</span><ChevronDown size={14} className="text-muted-foreground" /></button>
             <div className="ml-5 grid gap-0.5 border-l border-[#dce3d6] dark:border-border pl-2">{data.lists.filter(row => row.folderId === entry.id).map(listLink)}</div>
           </div>)}
           {data.lists.filter(row => !row.folderId).map(listLink)}
@@ -415,7 +415,7 @@ export function ShoppingApp() {
                   <h1 className="max-w-[640px] break-words text-[clamp(1.8rem,5.3vw,3.45rem)] leading-[1.02] font-black tracking-[-.055em]">{list.name}</h1>
                 </div>
                 {ownedTarget && <div className="flex shrink-0 flex-wrap items-center gap-2">
-                  <Button onClick={() => share(ownedTarget.scope, ownedTarget.id, ownedTarget.name)} className="h-10 bg-[#f2f5e9] dark:bg-accent text-[#284633] dark:text-accent-foreground hover:bg-white"><UsersRound /> Podeli</Button>
+                  <Button onClick={() => share(ownedTarget.scope, ownedTarget.id, ownedTarget.name)} className="share-list-button h-10 bg-[#f2f5e9] dark:bg-accent text-[#284633] dark:text-accent-foreground hover:bg-white"><UsersRound /> Podeli</Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="size-10 border border-white/25 text-white hover:bg-white/20 hover:text-white" aria-label="Opcije spiska"><MoreHorizontal /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => setPanel({ type: "rename", ...ownedTarget })}><Pencil /> Promeni naziv</DropdownMenuItem></DropdownMenuContent>
@@ -440,12 +440,12 @@ export function ShoppingApp() {
             </div>
             <div ref={groceriesRef} className={cn("mt-3 grid auto-rows-max content-start gap-4 rounded-[20px]", !shopping.length && "bg-[var(--empty-panel)]")}>
               {shopping.length > 0 ? <>
-              <section className="rounded-[20px] border border-[#e4e8dc] dark:border-border bg-background px-3 pb-1 sm:px-4">
-                <h3 className="flex items-center gap-2 border-b border-[#edf0e8] dark:border-border px-2 py-3.5 text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#f6ebdb] dark:bg-accent text-[#8b5c27] dark:text-accent-foreground"><ShoppingBag size={15} /></span> Za kupiti <span className="rounded-md bg-[#f0f3eb] dark:bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">{remaining.length}</span></h3>
+              <section className="grocery-section rounded-[20px] border border-[#e4e8dc] dark:border-border bg-background px-3 pb-1 sm:px-4">
+                <h3 className="flex items-center gap-2 border-b border-[#edf0e8] dark:border-border px-2 py-3.5 text-sm font-bold sm:px-3"><span className="remaining-icon grid size-7 place-items-center rounded-lg bg-[#f6ebdb] dark:bg-accent text-[#8b5c27] dark:text-accent-foreground"><ShoppingBag size={15} /></span> Za kupiti <span className="rounded-md bg-[#f0f3eb] dark:bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">{remaining.length}</span></h3>
                 {remaining.length ? <ul>{remaining.map(itemRow)}</ul> : <p className="px-3 py-5 text-sm text-muted-foreground">Sve sa spiska je kupljeno.</p>}
               </section>
-              {completed.length > 0 && <section className="rounded-[20px] border border-[#e4e8dc] dark:border-border bg-background px-3 pb-1 sm:px-4">
-                <button id="completed-heading" type="button" onClick={() => setHideChecked(!hideChecked)} aria-expanded={!hideChecked} className="flex w-full items-center gap-2 border-b border-[#edf0e8] dark:border-border px-2 py-3.5 text-left text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#e6efe1] dark:bg-accent text-[#436848] dark:text-accent-foreground"><CheckCheck size={16} /></span> Kupljeno <span className="rounded-md bg-[#f0f3eb] dark:bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">{completed.length}</span><ArrowDown size={15} className={cn("ml-auto text-muted-foreground", hideChecked && "-rotate-90")} /></button>
+              {completed.length > 0 && <section className="grocery-section rounded-[20px] border border-[#e4e8dc] dark:border-border bg-background px-3 pb-1 sm:px-4">
+                <button id="completed-heading" type="button" onClick={() => setHideChecked(!hideChecked)} aria-expanded={!hideChecked} className="flex w-full items-center gap-2 border-b border-[#edf0e8] dark:border-border px-2 py-3.5 text-left text-sm font-bold sm:px-3"><span className="completed-icon grid size-7 place-items-center rounded-lg bg-[#e6efe1] dark:bg-accent text-[#436848] dark:text-accent-foreground"><CheckCheck size={16} /></span> Kupljeno <span className="rounded-md bg-[#f0f3eb] dark:bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">{completed.length}</span><ArrowDown size={15} className={cn("ml-auto text-muted-foreground", hideChecked && "-rotate-90")} /></button>
                 {!hideChecked && <ul>{completed.map(itemRow)}</ul>}
               </section>}
             </> : <div className="grid justify-items-center rounded-[20px] border border-border px-4 py-10 text-center">
@@ -469,7 +469,7 @@ export function ShoppingApp() {
               </div>
             )}
           </> : <>
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-[#e8eee1] dark:bg-accent p-5 sm:p-8">
+            <div className="list-overview-heading flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-[#e8eee1] dark:bg-accent p-5 sm:p-8">
               <div className="min-w-0">
                 <div className="mb-3 grid size-11 place-items-center rounded-xl bg-[#dae6d4] dark:bg-accent text-primary">{folder ? <FolderOpen size={23} /> : <ListChecks size={23} />}</div>
                 <h1 className="break-words text-4xl font-black tracking-[-.05em] sm:text-5xl">{folder?.name ?? "Svi spiskovi"}</h1>
