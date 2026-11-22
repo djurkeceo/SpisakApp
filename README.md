@@ -24,7 +24,7 @@ Na računaru radi preko localhost adrese. Za test na više telefona koristi jedn
 
 ## Deljenje i rad bez interneta
 
-- Vlasnik deli spisak ili ceo folder jednokratnim pozivom na sedam dana. Pozvani korisnik se prijavljuje i eksplicitno prihvata poziv. Dodatne dozvole za dodavanje, izmenu i brisanje biraju se pojedinačno. Svako ko ima pristup može da vidi i čekira stavke.
+- Link za spisak može prihvatiti više korisnika. Poziv za ceo folder je jednokratan. Oba linka važe sedam dana. Pozvani korisnik se prijavljuje i eksplicitno prihvata poziv. Dodatne dozvole za dodavanje, izmenu i brisanje biraju se pojedinačno. Svako ko ima pristup može da vidi i čekira stavke.
 - Poziv za folder daje pristup postojećim i budućim spiskovima u njemu. Kada osoba ima i direktan pristup spisku, dozvole za spisak imaju prednost nad dozvolama iz foldera. Uklanjanje direktnog pristupa može ostaviti pristup preko foldera.
 - Aktivne kartice traže izmene otprilike na 1,6 sekundi. Izmene se traže i pri povratku na karticu ili ponovnom povezivanju.
 - U nedostatku interneta čekiranje se odmah vidi i upisuje u trajni lokalni red. Po povratku veze šalje se eksplicitni status stavke. Poslednji status koji server prihvati važi kada oba korisnika menjaju istu oznaku. Izmene količine ili napomene ostaju sačuvane. Ako je stavka izbrisana ili je ukinut pristup, aplikacija prikazuje obaveštenje.

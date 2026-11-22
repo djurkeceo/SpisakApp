@@ -31,6 +31,7 @@ async function connect() {
     CREATE TABLE IF NOT EXISTS purchases (item_id TEXT PRIMARY KEY REFERENCES items(id) ON DELETE CASCADE, user_id TEXT NOT NULL REFERENCES users(id));
     CREATE TABLE IF NOT EXISTS grants (scope TEXT NOT NULL, target_id TEXT NOT NULL, user_id TEXT NOT NULL REFERENCES users(id), flags INTEGER NOT NULL, PRIMARY KEY (scope, target_id, user_id));
     CREATE TABLE IF NOT EXISTS invites (key TEXT PRIMARY KEY, scope TEXT NOT NULL, target_id TEXT NOT NULL, flags INTEGER NOT NULL, expires INTEGER NOT NULL, accepted_by TEXT REFERENCES users(id));
+    CREATE TABLE IF NOT EXISTS invite_acceptances (invite_key TEXT NOT NULL REFERENCES invites(key) ON DELETE CASCADE, user_id TEXT NOT NULL REFERENCES users(id), PRIMARY KEY (invite_key, user_id));
     CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY, start INTEGER NOT NULL, count INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS check_receipts (user_id TEXT NOT NULL REFERENCES users(id), change_id TEXT NOT NULL, created INTEGER NOT NULL, PRIMARY KEY (user_id, change_id));
     CREATE INDEX IF NOT EXISTS check_receipts_by_date ON check_receipts(created);

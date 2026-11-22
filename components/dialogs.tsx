@@ -161,7 +161,7 @@ export function AppDialog({ panel, close, run, onCreated, acceptToken }: {
                   setCopied(true);
                 })}>{copied ? <Check /> : <Copy />}</Button>
               </div>
-              <p className="text-xs text-muted-foreground">{copied ? "Link je kopiran." : "Link važi sedam dana i može ga prihvatiti jedna osoba."}</p>
+              <p className="text-xs text-muted-foreground">{copied ? "Link je kopiran." : panel.scope === "list" ? "Isti link možeš poslati većem broju osoba. Važi sedam dana." : "Link važi sedam dana i može ga prihvatiti jedna osoba."}</p>
             </div>}
             {members.length > 0 && <div className="mt-1 grid gap-3 border-t border-border pt-4">
               <h3 className="text-sm font-bold">Osobe sa direktnim pristupom</h3>

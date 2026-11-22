@@ -150,13 +150,20 @@ export async function POST(req: NextRequest) {
         const owner = await ownerOf(db, targetScope, target);
         if (!owner) return fail("Spisak ili folder više nije dostupan.", 404);
         if (owner === user.id) return reply({ id: target, scope: targetScope });
-        if (entry.accepted_by === user.id) {
+        const accepted = entry.accepted_by === user.id || (targetScope === "list" && await first(db,
+          "SELECT 1 FROM invite_acceptances WHERE invite_key = ? AND user_id = ?", key, user.id));
+        if (accepted) {
           const stillGranted = await first(db, "SELECT 1 FROM grants WHERE scope = ? AND target_id = ? AND user_id = ?", targetScope, target, user.id);
           return stillGranted ? reply({ id: target, scope: targetScope }) : fail("Pristup je ukinut.", 403);
         }
-        if (entry.accepted_by || Number(entry.expires) < Date.now()) return fail("Poziv je iskorišćen ili je istekao.", 410);
+        if (Number(entry.expires) <= Date.now()) return fail("Poziv je istekao.", 410);
+        if (targetScope === "folder" && entry.accepted_by) return fail("Poziv je već iskorišćen.", 410);
         await execute(db, "INSERT INTO grants VALUES (?, ?, ?, ?) ON CONFLICT DO NOTHING", targetScope, target, user.id, Number(entry.flags));
-        await execute(db, "UPDATE invites SET accepted_by = ? WHERE key = ?", user.id, key);
+        if (targetScope === "list") {
+          await execute(db, "INSERT INTO invite_acceptances VALUES (?, ?)", key, user.id);
+        } else {
+          await execute(db, "UPDATE invites SET accepted_by = ? WHERE key = ?", user.id, key);
+        }
         return reply({ id: target, scope: targetScope });
       }
       if ("scope" in cmd) {

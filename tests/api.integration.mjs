@@ -58,6 +58,13 @@ try {
   await command(a.cookie, "revoke", { scope: "folder", id: folder.id, userId: b.user.id });
   assert.equal((await read(b.cookie)).lists.length, 0);
   await command(b.cookie, "accept", { token: invite.token }, 403);
+  const group = await command(a.cookie, "invite", { scope: "list", id: list.id, permissions: { add: false, edit: false, remove: false } });
+  for (const account of [b, c, b]) await command(account.cookie, "accept", { token: group.token });
+  const members = await command(a.cookie, "members", { scope: "list", id: list.id });
+  assert.equal(members.members.length, 2);
+  await command(a.cookie, "revoke", { scope: "list", id: list.id, userId: b.user.id });
+  await command(b.cookie, "accept", { token: group.token }, 403);
+  assert.ok((await read(c.cookie)).lists.some(row => row.id === list.id));
   console.log("API proverio registraciju, pozive, dozvole, deljenje foldera, čekiranje, ponovljenu isporuku i ukidanje pristupa.");
 } finally {
   (await database()).close();
