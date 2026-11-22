@@ -89,15 +89,15 @@ button.bg-primary {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes check-settle {
-  0% { transform: scale(.65); opacity: .3; }
-  70% { transform: scale(1.12); }
+  0% { transform: scale(.84); opacity: .6; }
+  70% { transform: scale(1.025); }
   100% { transform: scale(1); opacity: 1; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .shopping-view { animation: view-arrive 230ms cubic-bezier(.2,.75,.3,1); }
-  [role="dialog"][data-state="open"] { animation: dialog-arrive 220ms ease-out; }
-  [role="dialog"][data-state="closed"] { animation: dialog-arrive 140ms ease-in reverse; }
-  [data-slot="checkbox"][data-state="checked"] svg { animation: check-settle 220ms ease-out; }
+  .shopping-view { animation: view-arrive 300ms cubic-bezier(.2,.75,.3,1); }
+  [role="dialog"][data-state="open"] { animation: dialog-arrive 290ms ease-out; }
+  [role="dialog"][data-state="closed"] { animation: dialog-arrive 190ms ease-in reverse; }
+  [data-slot="checkbox"][data-state="checked"] svg { animation: check-settle 340ms ease-in-out; }
   main li > button, button.bg-primary {
     transition: translate 150ms ease-out, scale 130ms ease-out, box-shadow 150ms, background-color 150ms;
   }
@@ -114,7 +114,7 @@ button.bg-primary {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  aside > nav, main > header, main li, main .border-dashed,
+  aside > nav, main > header, main li:not(.grocery-row), main .border-dashed,
   [role="status"], [role="alert"] {
     animation: view-arrive 190ms ease-out;
   }
@@ -130,7 +130,7 @@ button.bg-primary {
   }
 
   [role="menu"] { transform-origin: var(--radix-dropdown-menu-content-transform-origin); }
-  [role="menu"][data-state="open"] { animation: menu-reveal 150ms ease-out; }
+  [role="menu"][data-state="open"] { animation: menu-reveal 210ms ease-out; }
   [role="menu"][data-state="closed"] { animation: menu-reveal 100ms ease-in reverse; }
 
   [data-slot="input"], label:has([data-slot="checkbox"]) {

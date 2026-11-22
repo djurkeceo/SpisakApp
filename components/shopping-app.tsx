@@ -24,7 +24,7 @@ export function ShoppingApp() {
   const [invite, setInvite] = useState("");
   const [inviteBusy, setInviteBusy] = useState(false);
   const [hideChecked, setHideChecked] = useState(false);
-  const moves = useRef(new Map<string, { top: number; checked: boolean }>());
+  const moves = useRef(new Map<string, { positions: Map<string, number>; checked: boolean }>());
   const isDemo = data.user.id === "demo";
   const list = view.scope === "list" ? data.lists.find(row => row.id === view.id) : undefined;
   const folder = view.scope === "folder" ? data.folders.find(row => row.id === view.id) : undefined;
@@ -95,7 +95,11 @@ export function ShoppingApp() {
   function toggle(item: Item, checked: boolean) {
     const row = document.getElementById("item-" + item.id);
     if (row && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      moves.current.set(item.id, { top: row.getBoundingClientRect().top, checked });
+      const positions = new Map<string, number>();
+      document.querySelectorAll<HTMLElement>(".grocery-row").forEach(element => {
+        positions.set(element.id, element.getBoundingClientRect().top + window.scrollY);
+      });
+      moves.current.set(item.id, { positions, checked });
     }
     void run({ action: "check", listId: item.listId, id: item.id, checked })
       .catch((error: Error) => { moves.current.delete(item.id); setNotice(error.message); });
@@ -107,25 +111,37 @@ export function ShoppingApp() {
       if (item && item.checked !== move.checked) continue;
       moves.current.delete(id);
       if (!item) continue;
-      const row = document.getElementById("item-" + id);
-      if (!row) {
+      const movingId = "item-" + id;
+      for (const [rowId, start] of move.positions) {
+        const row = document.getElementById(rowId);
+        if (!row) continue;
+        for (const animation of row.getAnimations()) {
+          if (animation.id === "grocery-move") animation.cancel();
+        }
+        const offset = start - (row.getBoundingClientRect().top + window.scrollY);
+        if (Math.abs(offset) < 1) continue;
+        const layer = rowId === movingId ? "2" : "1";
+        row.animate([
+          { transform: "translateY(" + offset + "px)", zIndex: layer },
+          { transform: "translateY(0)", zIndex: layer }
+        ], {
+          id: "grocery-move",
+          duration: Math.min(760, 440 + Math.abs(offset) * 0.45),
+          easing: "cubic-bezier(.42,0,.18,1)"
+        });
+      }
+      if (!document.getElementById(movingId)) {
         document.getElementById("completed-heading")?.animate(
           [{ backgroundColor: "#dcebdc" }, { backgroundColor: "transparent" }],
-          { duration: 340 }
+          { duration: 520 }
         );
-        continue;
       }
-      const offset = move.top - row.getBoundingClientRect().top;
-      row.animate([
-        { translate: "0 " + offset + "px", backgroundColor: "#e5f1e5" },
-        { translate: "0 0", backgroundColor: "rgba(255,255,255,.84)" }
-      ], { duration: 360, easing: "cubic-bezier(.2,.75,.25,1)" });
     }
   }, [shopping]);
 
   function itemRow(item: Item) {
     return (
-      <li id={"item-" + item.id} key={item.id} className="group flex min-h-[72px] items-center gap-2 border-b border-[#edf0e8] px-2 last:border-b-0 sm:px-3">
+      <li id={"item-" + item.id} key={item.id} className="grocery-row relative group flex min-h-[72px] items-center gap-2 border-b border-[#edf0e8] px-2 last:border-b-0 sm:px-3">
         <label className="flex min-h-[70px] min-w-0 flex-1 cursor-pointer items-center gap-3 py-2">
           <Checkbox checked={item.checked} onCheckedChange={(value: boolean | "indeterminate") => toggle(item, value === true)} aria-label={item.name} className={cn("size-[23px] rounded-[7px]", item.checked ? "data-[state=checked]:border-[#dfead9] data-[state=checked]:bg-[#dfead9] [&_svg]:text-[#3d6340]" : "border-[#c8d3c4]")} />
           <span className="min-w-0 break-words">
