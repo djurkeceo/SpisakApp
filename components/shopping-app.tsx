@@ -163,6 +163,21 @@ export function ShoppingApp() {
     }
   }, [shopping]);
 
+  const emptyTransition = useRef<{ listId: string; height: number } | null>(null);
+  const emptyRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const previous = emptyTransition.current;
+    emptyTransition.current = null;
+    const box = emptyRef.current;
+    if (!previous || previous.listId !== list?.id || !box ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const target = box.getBoundingClientRect().height;
+    box.animate([
+      { height: previous.height + "px", opacity: 0, overflow: "hidden" },
+      { height: target + "px", opacity: 1, overflow: "hidden" }
+    ], { duration: 460, easing: "cubic-bezier(.42,0,.18,1)" });
+  }, [shopping.length, list?.id]);
+
   const removing = useRef(new Set<string>());
 
   async function removeItem(item: Item) {
@@ -181,8 +196,12 @@ export function ShoppingApp() {
         ], { duration: 420, easing: "cubic-bezier(.42,0,.18,1)", fill: "forwards" });
         await exit.finished;
       }
+      if (groceriesRef.current) {
+        emptyTransition.current = { listId: item.listId, height: groceriesRef.current.getBoundingClientRect().height };
+      }
       await run({ action: "remove", listId: item.listId, id: item.id });
     } catch (error) {
+      emptyTransition.current = null;
       setNotice(error instanceof Error ? error.message : "Namirnica nije obrisana.");
     } finally {
       removing.current.delete(item.id);
@@ -334,11 +353,11 @@ export function ShoppingApp() {
                 <button id="completed-heading" type="button" onClick={() => setHideChecked(!hideChecked)} aria-expanded={!hideChecked} className="flex w-full items-center gap-2 border-b border-[#edf0e8] px-2 py-3.5 text-left text-sm font-bold sm:px-3"><span className="grid size-7 place-items-center rounded-lg bg-[#e6efe1] text-[#436848]"><CheckCheck size={16} /></span> Kupljeno <span className="rounded-md bg-[#f0f3eb] px-1.5 py-0.5 text-xs text-muted-foreground">{completed.length}</span><ArrowDown size={15} className={cn("ml-auto text-muted-foreground", hideChecked && "-rotate-90")} /></button>
                 {!hideChecked && <ul>{completed.map(itemRow)}</ul>}
               </section>}
-            </div> : <div className="mt-3 grid justify-items-center rounded-[20px] border border-dashed border-border bg-background px-4 py-10 text-center">
+            </div> : <div ref={emptyRef} className="mt-3"><div className="grid justify-items-center rounded-[20px] border border-dashed border-border bg-background px-4 py-10 text-center">
               <span className="mb-3 grid size-12 place-items-center rounded-2xl bg-accent text-primary"><ShoppingBag size={23} /></span>
               <p className="font-bold">Spisak je prazan</p>
               {canAdd && <p className="mt-1 text-sm text-muted-foreground">Pritisni + da dodaš prvu namirnicu.</p>}
-            </div>}
+            </div></div>}
             {canAdd && (
               <div className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-center">
                 <Button
