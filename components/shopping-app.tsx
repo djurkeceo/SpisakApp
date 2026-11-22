@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ArrowDown, ArrowLeft, ArrowUpRight, Check, CheckCheck, ChevronDown, ChevronRight,
   CirclePlus, ClipboardList, FolderClosed, FolderOpen, FolderPlus, ListChecks,
-  LogIn, LogOut, MoreHorizontal, Pencil, Plus, RotateCw, ShoppingBag, SlidersHorizontal,
+  LogIn, LogOut, MoreHorizontal, Pencil, Plus, RotateCw, ShoppingBag,
   Trash2, UserRound, UsersRound, Wifi, WifiOff, X
 } from "lucide-react";
 import { AppDialog, type Panel } from "@/components/dialogs";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { useShopping } from "@/lib/use-shopping";
 import type { GroceryList, Item, Scope } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -24,8 +23,6 @@ export function ShoppingApp() {
   const [panel, setPanel] = useState<Panel | null>(null);
   const [invite, setInvite] = useState("");
   const [inviteBusy, setInviteBusy] = useState(false);
-  const [quick, setQuick] = useState("");
-  const [adding, setAdding] = useState(false);
   const [hideChecked, setHideChecked] = useState(false);
   const moves = useRef(new Map<string, { top: number; checked: boolean }>());
   const isDemo = data.user.id === "demo";
@@ -54,7 +51,6 @@ export function ShoppingApp() {
   }, [list, folder, ready, view]);
 
   function open(scope: Scope, id: string) {
-    setQuick("");
     setHideChecked(false);
     setView({ scope, id });
     const url = new URL(window.location.href);
@@ -94,18 +90,6 @@ export function ShoppingApp() {
 
   function share(scope: Scope, id: string, name: string) {
     setPanel(isDemo ? { type: "auth" } : { type: "share", scope, id, name });
-  }
-
-  async function quickAdd(event: FormEvent) {
-    event.preventDefault();
-    if (!list || !quick.trim() || adding) return;
-    setAdding(true);
-    try {
-      await run({ action: "add", listId: list.id, name: quick.trim(), quantity: "", note: "" });
-      setQuick("");
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "Namirnica nije dodata.");
-    } finally { setAdding(false); }
   }
 
   function toggle(item: Item, checked: boolean) {
@@ -269,13 +253,23 @@ export function ShoppingApp() {
             </div> : <div className="mt-3 grid justify-items-center rounded-[20px] border border-dashed border-border bg-background px-4 py-10 text-center">
               <span className="mb-3 grid size-12 place-items-center rounded-2xl bg-accent text-primary"><ShoppingBag size={23} /></span>
               <p className="font-bold">Spisak je prazan</p>
-              {canAdd && <p className="mt-1 text-sm text-muted-foreground">Dodaj prvu namirnicu koristeći polje ispod.</p>}
+              {canAdd && <p className="mt-1 text-sm text-muted-foreground">Pritisni + da dodaš prvu namirnicu.</p>}
             </div>}
-            {canAdd && <form onSubmit={quickAdd} className="safe-bottom sticky bottom-0 z-10 -mx-4 mt-4 flex items-center gap-2 border-t border-[#e1e6da] bg-[#f8f8f2]/95 px-4 pt-3 backdrop-blur sm:mx-0 sm:mt-5 sm:rounded-2xl sm:border sm:bg-[#f8f8f2]">
-              <Input aria-label="Naziv nove namirnice" placeholder="Dodaj namirnicu…" className="flex-1" value={quick} maxLength={100} disabled={addDisabled || adding} onChange={event => setQuick(event.target.value)} />
-              <Button type="button" variant="outline" size="icon" disabled={addDisabled} aria-label="Dodaj namirnicu sa detaljima" onClick={() => setPanel({ type: "item", listId: list.id })}><SlidersHorizontal /></Button>
-              <Button type="submit" disabled={addDisabled || adding || !quick.trim()} className="h-12"><Plus /><span className="hidden min-[380px]:inline">Dodaj</span><span className="sr-only min-[380px]:hidden">Dodaj</span></Button>
-            </form>}
+            {canAdd && (
+              <div className="pointer-events-none sticky bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 mt-4 flex justify-end">
+                <Button
+                  type="button"
+                  aria-label="Dodaj namirnicu"
+                  aria-haspopup="dialog"
+                  title="Dodaj namirnicu"
+                  disabled={addDisabled}
+                  className="pointer-events-auto size-16 rounded-full shadow-lg [&_svg]:size-8"
+                  onClick={() => setPanel({ type: "item", listId: list.id })}
+                >
+                  <Plus aria-hidden="true" />
+                </Button>
+              </div>
+            )}
           </> : <>
             <div className="flex flex-wrap items-center justify-between gap-4 rounded-[24px] bg-[#e8eee1] p-5 sm:p-8">
               <div className="min-w-0">
